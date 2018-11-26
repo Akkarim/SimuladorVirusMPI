@@ -55,33 +55,41 @@ int main(int argc, char* argv[]) {
 /*-------------------------------------ejecución del proceso principal--------------------------------*/
 
 	if (mid == 0) {
-		ifstream lectura;
-		ifstream archivo;
-		string::size_type sz; // algo para la stiring
+		std::string orbits ("365.24 29.53");
+	  std::string::size_type sz;     // alias of size_t
 
-		string nombre;
-		double prInfeccion;
-		int semanas;
-		string dato;
+	  double earth = std::stod (orbits,substr(sz));
+	  double moon = std::stod (orbits.substr(sz));
+	  std::cout << "The moon completes " << (earth/moon) << " orbits per Earth year.\n";
+		//ifstream lectura;
+		//ifstream archivo;
+		//string::size_type sz; // algo para la stiring
 
-		int cont = 0;
-		archivo.open("DATOS.txt", ios::in);
-		char c = archivo.get();
-		while (!archivo.eof()) {
-			dato += c;
-			if (c == ';' && cont == 0) {
-				nombre = dato;
-				dato.clear;
-				cont++;
-			}
-			else if (c == ';' && cont == 1) {
-				prInfeccion = stod(dato.substr(sz));
-			}
-			c = archivo.get();
-		}
-		cout << nombre << prInfeccion << endl;
+		//string nombre;
+		//double prInfeccion;
+		//int semanas;
+		//string dato;
 
-		archivo.close();
+		//int cont = 0;
+		//archivo.open("DATOS.txt", ios::in);
+		//char c = archivo.get();
+		//while (!archivo.eof()) {
+		//	dato += c;
+		//	if (c == ';' && cont == 0) {
+		//		nombre = dato;
+		//		dato.clear;
+		//		cont++;
+		//	}
+		//	else if (c == ';' && cont == 1) {
+		//		prInfeccion = stod(dato, &sz);
+		//		dato.clear;
+		//		cont++;
+		//	}
+		//	c = archivo.get();
+		//}
+		//cout << nombre << prInfeccion << endl;
+
+		//archivo.close();
 	}
 
 
