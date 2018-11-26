@@ -14,6 +14,9 @@
 
 #include <mpi.h> 
 #include <iostream>
+#include <fstream>
+#include <sstream>
+#include <string>
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
@@ -50,18 +53,40 @@ int main(int argc, char* argv[]) {
 #  endif
 
 /*-------------------------------------ejecución del proceso principal--------------------------------*/
+
 	if (mid == 0) {
-		int i, n;
-		cout << "Ingrese la cantidad de personas: " << endl;
-		cin >> n;
-		int* persona = (int*)malloc((n*4 + 1) * sizeof(int)); // talvez ocupe paréntesis
-		int fila = n, col = n;
-		int *M = (int*)malloc(fila * col * sizeof(int)); // Matriz de enfermos sexuales
-		for (i = 0; i < n; i++) {
-			M[i] = rand()% 100;
+		ifstream lectura;
+		ifstream archivo;
+		string::size_type sz; // algo para la stiring
+
+		string nombre;
+		double prInfeccion;
+		int semanas;
+		string dato;
+
+		int cont = 0;
+		archivo.open("DATOS.txt", ios::in);
+		char c = archivo.get();
+		while (!archivo.eof()) {
+			dato += c;
+			if (c == ';' && cont == 0) {
+				nombre = dato;
+				dato.clear;
+				cont++;
+			}
+			else if (c == ';' && cont == 1) {
+				prInfeccion = stod(dato.substr(sz));
+			}
+			c = archivo.get();
 		}
-		cout << M[i] << endl;
+		cout << nombre << prInfeccion << endl;
+
+		archivo.close();
 	}
+
+
+		// Matriz de enfermos sexuales
+
 	
 
 
