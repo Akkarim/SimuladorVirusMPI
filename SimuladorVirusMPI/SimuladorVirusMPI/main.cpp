@@ -56,10 +56,14 @@ int main(int argc, char* argv[]) {
 	/*****************************************Inicio Inicializar*****************************************************/
 	if (mid == 0) {
 		for (int i = 0; i<np ; i += 4){
-			/*poblacion[i] = x;
+			/*
+			pair<x,y>=generarPos();
+			 
+			poblacion[i] = x;
 			poblacion[i + 1] = y;
 			poblacion[i + 2] = semana;
-			poblacion[i + 3] = estado;*/
+			poblacion[i + 3] = estado;
+			*/
 		}
 	}
 	/******************************************Fin Inicializar*******************************************************/
