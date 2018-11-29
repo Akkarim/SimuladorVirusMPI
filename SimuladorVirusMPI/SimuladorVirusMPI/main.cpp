@@ -55,41 +55,42 @@ int main(int argc, char* argv[]) {
 /*-------------------------------------ejecución del proceso principal--------------------------------*/
 
 	if (mid == 0) {
-		std::string orbits ("365.24 29.53");
-	  std::string::size_type sz;     // alias of size_t
+	  //std::string orbits ("365.24 29.53");
+	  //std::string::size_type sz;     // alias of size_t
+	  //double earth = std::stod (orbits,&sz);
+	  //double moon = std::stod (orbits.substr(sz));
+	  //std::cout << "The moon completes " << (earth/moon) << " orbits per Earth year.\n";
 
-	  double earth = std::stod (orbits,substr(sz));
-	  double moon = std::stod (orbits.substr(sz));
-	  std::cout << "The moon completes " << (earth/moon) << " orbits per Earth year.\n";
-		//ifstream lectura;
-		//ifstream archivo;
-		//string::size_type sz; // algo para la stiring
+		ifstream lectura;
+		ifstream archivo;
+		string::size_type sz; // algo para la stiring
 
-		//string nombre;
-		//double prInfeccion;
-		//int semanas;
-		//string dato;
+		string nombre;
+		double prInfeccion;
+		double temp;
+		int semanas;
+		string dato;
 
-		//int cont = 0;
-		//archivo.open("DATOS.txt", ios::in);
-		//char c = archivo.get();
-		//while (!archivo.eof()) {
-		//	dato += c;
-		//	if (c == ';' && cont == 0) {
-		//		nombre = dato;
-		//		dato.clear;
-		//		cont++;
-		//	}
-		//	else if (c == ';' && cont == 1) {
-		//		prInfeccion = stod(dato, &sz);
-		//		dato.clear;
-		//		cont++;
-		//	}
-		//	c = archivo.get();
-		//}
-		//cout << nombre << prInfeccion << endl;
+		int cont = 0;
+		archivo.open("DATOS.txt", ios::in);
+		char c = archivo.get();
+		while (!archivo.eof()) {
+			dato += c;
+			cout << dato << endl;//*-*-*-*-*-*-*-*-*-*-*-*
+			if (c == ';' && cont == 0) {
+				nombre = dato;
+				dato.clear();
+				cont++;
+			}
+			else if (c == ';' && cont == 1) {
+				prInfeccion = stod(dato, &sz);
+				cont++;
+			}
+			c = archivo.get();
+		}
+		cout << nombre << prInfeccion << endl;
 
-		//archivo.close();
+		archivo.close();
 	}
 
 
