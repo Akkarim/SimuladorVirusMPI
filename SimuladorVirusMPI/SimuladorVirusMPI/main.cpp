@@ -68,14 +68,15 @@ int main(int argc, char* argv[]) {
 		string nombre;
 		double prInfeccion;
 		double temp;
-		int semanas;
+		int personas;
 		string dato;
 
 		int cont = 0;
 		archivo.open("DATOS.txt", ios::in);
 		char c = archivo.get();
 		while (!archivo.eof()) {
-			dato += c;
+			if (c != ';')
+				dato += c;
 			cout << dato << endl;//*-*-*-*-*-*-*-*-*-*-*-*
 			if (c == ';' && cont == 0) {
 				nombre = dato;
@@ -84,11 +85,17 @@ int main(int argc, char* argv[]) {
 			}
 			else if (c == ';' && cont == 1) {
 				prInfeccion = stod(dato, &sz);
+				dato.clear();
+				cont++;
+			}
+			else if (c == ';' && cont == 2) {
+				personas = stoi(dato, &sz);
+				dato.clear();
 				cont++;
 			}
 			c = archivo.get();
 		}
-		cout << nombre << prInfeccion << endl;
+		cout << nombre << "Proba de infeccion: " << prInfeccion << "Semanas: " << personas << endl;
 
 		archivo.close();
 	}
