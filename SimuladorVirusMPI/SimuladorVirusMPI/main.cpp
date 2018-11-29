@@ -1,14 +1,14 @@
 /* Archivo:      mpi_plantilla.cpp
-* Propósito:   ....
+* Propï¿½sito:   ....
 *
-* Compilación:   mpicxx -g -Wall -o mpi_plantilla mpi_plantilla.cpp
-* Ejecución:     mpiexec -n <num_proc> ./mpi_plantilla <secuencia de valores de parámetros>
+* Compilaciï¿½n:   mpicxx -g -Wall -o mpi_plantilla mpi_plantilla.cpp
+* Ejecuciï¿½n:     mpiexec -n <num_proc> ./mpi_plantilla <secuencia de valores de parï¿½metros>
 *
 * Entradas:     ...
 * Salidas:    ...
 *
 * Notas:
-* 1.  bandera DEBUG produce salida detallada para depuración.
+* 1.  bandera DEBUG produce salida detallada para depuraciï¿½n.
 *
 */
 
@@ -31,30 +31,52 @@ void obt_args(
 	char*    argv[]        /* in  */,
 	int&     dato_salida  /* out */);
 
-/*---------------------------------------------Métodos------------------------------------------------*/
+/*---------------------------------------------Mï¿½todos------------------------------------------------*/
 //void persona() {}
 
-/*---------------------------------------------Métodos------------------------------------------------*/
+/*---------------------------------------------Mï¿½todos------------------------------------------------*/
 
 
 int main(int argc, char* argv[]) {
 	int mid; // id de cada proceso
 	int cnt_proc; // cantidad de procesos
-	MPI_Status mpi_status; // para capturar estado al finalizar invocación de funciones MPI
+	int n,np,local_n;
+	int* poblacion;
+
+	MPI_Status mpi_status; // para capturar estado al finalizar invocaciï¿½n de funciones MPI
 						   /* Arrancar ambiente MPI */
 	MPI_Init(&argc, &argv);             		/* Arranca ambiente MPI */
 	MPI_Comm_rank(MPI_COMM_WORLD, &mid); 		/* El comunicador le da valor a id (rank del proceso) */
-	MPI_Comm_size(MPI_COMM_WORLD, &cnt_proc);  /* El comunicador le da valor a p (número de procesos) */
+	MPI_Comm_size(MPI_COMM_WORLD, &cnt_proc);  /* El comunicador le da valor a p (nï¿½mero de procesos) */
 
+	n = strtol(argv[1], NULL, 10);
+	np = n*4;
+	local_n = np / mid;//
+	poblacion = (int*)malloc(np * sizeof(int));
+	/*****************************************Inicio Inicializar*****************************************************/
+	if (mid == 0) {
+		for (int i = 0; i<np ; i += 4){
+			/*
+			pair<x,y>=generarPos();
+			 
+			poblacion[i] = x;
+			poblacion[i + 1] = y;
+			poblacion[i + 2] = semana;
+			poblacion[i + 3] = estado;
+			*/
+		}
+	}
+	/******************************************Fin Inicializar*******************************************************/
 #  ifdef DEBUG 
 	if (mid == 0)
 		cin.ignore();
 	MPI_Barrier(MPI_COMM_WORLD);
 #  endif
 
-/*-------------------------------------ejecución del proceso principal--------------------------------*/
+/*-------------------------------------ejecuciï¿½n del proceso principal--------------------------------*/
 
 	if (mid == 0) {
+
 	  //std::string orbits ("365.24 29.53");
 	  //std::string::size_type sz;     // alias of size_t
 	  //double earth = std::stod (orbits,&sz);
@@ -106,53 +128,55 @@ int main(int argc, char* argv[]) {
 	
 
 
-/*------------------------------------finalización de la ejecución paralela---------------------------*/
+/*------------------------------------finalizaciï¿½n de la ejecuciï¿½n paralela---------------------------*/
 	if (mid == 0)
 		cin.ignore();
-	MPI_Barrier(MPI_COMM_WORLD); // para sincronizar la finalización de los procesos
+	MPI_Barrier(MPI_COMM_WORLD); // para sincronizar la finalizaciï¿½n de los procesos
 
 	MPI_Finalize();
 	return 0;
 }/*-------------------------------------------------main final---------------------------------------*/
 
 
- /*---------------------------------------------Métodos------------------------------------------------*/
+ /*---------------------------------------------Mï¿½todos------------------------------------------------*/
 
 
- /*---------------------------------------------Métodos------------------------------------------------*/
+ /*---------------------------------------------Mï¿½todos------------------------------------------------*/
 
    /*---------------------------------------------------------------------
    * REQ: N/A
    * MOD: N/A
-   * EFE: despliega mensaje indicando cómo ejecutar el programa y pasarle parámetros de entrada.
+   * EFE: despliega mensaje indicando cï¿½mo ejecutar el programa y pasarle parï¿½metros de entrada.
    * ENTRAN:
    *		nombre_prog:  nombre del programa
    * SALEN: N/A
    */
 void uso(string nombre_prog /* in */) {
-	cerr << nombre_prog.c_str() << " secuencia de parámetros de entrada" << endl;
+	cerr << nombre_prog.c_str() << " secuencia de parï¿½metros de entrada" << endl;
 	exit(0);
 }  /* uso */
 
    /*---------------------------------------------------------------------
    * REQ: N/A
    * MOD: dato_salida
-   * EFE: obtiene los valores de los argumentos pasados por "línea de comandos".
+   * EFE: obtiene los valores de los argumentos pasados por "lï¿½nea de comandos".
    * ENTRAN:
    *		nombre_prog:  nombre del programa
    * SALEN:
-   *		dato_salida: un dato de salida con un valor de argumento pasado por "línea de comandos".
+   *		dato_salida: un dato de salida con un valor de argumento pasado por "lï¿½nea de comandos".
    */
 void obt_args(
 	char*    argv[]        /* in  */,
 	int&     dato_salida  /* out */) {
 
-	dato_salida = strtol(argv[1], NULL, 10); // se obtiene valor del argumento 1 pasado por "línea de comandos".
+	dato_salida = strtol(argv[1], NULL, 10); // se obtiene valor del argumento 1 pasado por "lï¿½nea de comandos".
 
 #  ifdef DEBUG
 	cout << "dato_salida = " << dato_salida << endl;
 #  endif
 }  /* obt_args */
+
+
 
 //End of file with a Cow (Bettsy)
 //                               __.----.___
