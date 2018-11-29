@@ -97,8 +97,9 @@ int main(int argc, char* argv[]) {
 		archivo.open("DATOS.txt", ios::in);
 		char c = archivo.get();
 		while (!archivo.eof()) {
-			if (c != ';')
+			if (c != ';') {
 				dato += c;
+			}
 			cout << dato << endl;//*-*-*-*-*-*-*-*-*-*-*-*
 			if (c == ';' && cont == 0) {
 				nombre = dato;
