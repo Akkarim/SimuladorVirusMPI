@@ -40,12 +40,29 @@ void obt_args(
 int main(int argc, char* argv[]) {
 	int mid; // id de cada proceso
 	int cnt_proc; // cantidad de procesos
+	int n,np,local_n;
+	int* poblacion;
+
 	MPI_Status mpi_status; // para capturar estado al finalizar invocación de funciones MPI
 						   /* Arrancar ambiente MPI */
 	MPI_Init(&argc, &argv);             		/* Arranca ambiente MPI */
 	MPI_Comm_rank(MPI_COMM_WORLD, &mid); 		/* El comunicador le da valor a id (rank del proceso) */
 	MPI_Comm_size(MPI_COMM_WORLD, &cnt_proc);  /* El comunicador le da valor a p (número de procesos) */
 
+	n = strtol(argv[1], NULL, 10);
+	np = n*4;
+	local_n = np / mid;//
+	poblacion = (int*)malloc(np * sizeof(int));
+	/*****************************************Inicio Inicializar*****************************************************/
+	if (mid == 0) {
+		for (int i = 0; i<np ; i += 4){
+			/*poblacion[i] = x;
+			poblacion[i + 1] = y;
+			poblacion[i + 2] = semana;
+			poblacion[i + 3] = estado;*/
+		}
+	}
+	/******************************************Fin Inicializar*******************************************************/
 #  ifdef DEBUG 
 	if (mid == 0)
 		cin.ignore();
@@ -55,10 +72,10 @@ int main(int argc, char* argv[]) {
 /*-------------------------------------ejecución del proceso principal--------------------------------*/
 
 	if (mid == 0) {
-		std::string orbits ("365.24 29.53");
+	std::string orbits ("365.24 29.53");
 	  std::string::size_type sz;     // alias of size_t
 
-	  double earth = std::stod (orbits,substr(sz));
+	  double earth = std::stod (orbits.substr(sz));
 	  double moon = std::stod (orbits.substr(sz));
 	  std::cout << "The moon completes " << (earth/moon) << " orbits per Earth year.\n";
 		//ifstream lectura;
@@ -145,6 +162,8 @@ void obt_args(
 	cout << "dato_salida = " << dato_salida << endl;
 #  endif
 }  /* obt_args */
+
+
 
 //End of file with a Cow (Bettsy)
 //                               __.----.___
