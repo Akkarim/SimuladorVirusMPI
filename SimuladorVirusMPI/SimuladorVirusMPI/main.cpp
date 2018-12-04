@@ -1,17 +1,3 @@
-/* Archivo:      mpi_plantilla.cpp
-* Prop�sito:   ....
-*
-* Compilaci�n:   mpicxx -g -Wall -o mpi_plantilla mpi_plantilla.cpp
-* Ejecuci�n:     mpiexec -n <num_proc> ./mpi_plantilla <secuencia de valores de par�metros>
-*
-* Entradas:     ...
-* Salidas:    ...
-*
-* Notas:
-* 1.  bandera DEBUG produce salida detallada para depuraci�n.
-*
-*/
-
 #include <mpi.h> 
 #include <iostream>
 #include <fstream>
@@ -31,17 +17,11 @@ void obt_args(
 	char*    argv[]        /* in  */,
 	int&     dato_salida  /* out */);
 
-/*---------------------------------------------M�todos------------------------------------------------*/
-//void persona() {}
-
-/*---------------------------------------------M�todos------------------------------------------------*/
-
 
 int main(int argc, char* argv[]) {
 	int mid; // id de cada proceso
 	int cnt_proc; // cantidad de procesos
-	int n,np,local_n;
-	int* poblacion;
+	int n, np, local_n;
 
 	MPI_Status mpi_status; // para capturar estado al finalizar invocaci�n de funciones MPI
 						   /* Arrancar ambiente MPI */
@@ -49,123 +29,96 @@ int main(int argc, char* argv[]) {
 	MPI_Comm_rank(MPI_COMM_WORLD, &mid); 		/* El comunicador le da valor a id (rank del proceso) */
 	MPI_Comm_size(MPI_COMM_WORLD, &cnt_proc);  /* El comunicador le da valor a p (n�mero de procesos) */
 
-	n = strtol(argv[1], NULL, 10);
-	np = n*4;
-	local_n = np / mid;//
-	poblacion = (int*)malloc(np * sizeof(int));
-	/*****************************************Inicio Inicializar*****************************************************/
-	if (mid == 0) {
-		for (int i = 0; i<np ; i += 4){
-			/*
-			pair<x,y>=generarPos();
-			 
-			poblacion[i] = x;
-			poblacion[i + 1] = y;
-			poblacion[i + 2] = semana;
-			poblacion[i + 3] = estado;
-			*/
-		}
-	}
-	/******************************************Fin Inicializar*******************************************************/
+
 #  ifdef DEBUG 
 	if (mid == 0)
 		cin.ignore();
 	MPI_Barrier(MPI_COMM_WORLD);
 #  endif
 
-/*-------------------------------------ejecuci�n del proceso principal--------------------------------*/
-
+	/*-------------------------------------ejecuci�n del proceso principal----------------------------*/
+	double prInfeccion;
+	int poblacion;
+	int dimension;
+	double infInicial; //Infección inicial
+	int duracion;
+	double probInf; //Probabilidad de infección
+	double probRec; //Probabilidad de Recupereci+on
+	/*-------------------------------------Recuperación de Datos--------------------------------------*/
 	if (mid == 0) {
-<<<<<<< HEAD
-
-	  //std::string orbits ("365.24 29.53");
-	  //std::string::size_type sz;     // alias of size_t
-	  //double earth = std::stod (orbits,&sz);
-	  //double moon = std::stod (orbits.substr(sz));
-	  //std::cout << "The moon completes " << (earth/moon) << " orbits per Earth year.\n";
 
 		ifstream lectura;
 		ifstream archivo;
 		string::size_type sz; // algo para la stiring
-
-		string nombre;
-		double prInfeccion;
-		double temp;
-		int semanas;
 		string dato;
 
 		int cont = 0;
 		archivo.open("DATOS.txt", ios::in);
 		char c = archivo.get();
 		while (!archivo.eof()) {
-<<<<<<< HEAD
 			if (c != ';') {
 				dato += c;
 			}
-=======
-			dato += c;
->>>>>>> parent of b8bf829... Sigo con los datos
-			cout << dato << endl;//*-*-*-*-*-*-*-*-*-*-*-*
-			if (c == ';' && cont == 0) {
-				nombre = dato;
+			//cout << dato << endl;///*-*-*-*-*-*-*-*-*-*-*-*
+			if (c == ';' && cont == 0) { // Poblacion
+				poblacion = stoi(dato, &sz);
 				dato.clear();
 				cont++;
 			}
-			else if (c == ';' && cont == 1) {
-				prInfeccion = stod(dato, &sz);
+			else if (c == ';' && cont == 1) { //Dimensión
+				dimension = stoi(dato, &sz);
+				dato.clear();
+				cont++;
+			}
+			else if (c == ';' && cont == 2) { // infección inicial
+				infInicial = stod(dato, &sz);
+				dato.clear();
+				cont++;
+			}
+			else if (c == ';' && cont == 3) { // Duración
+				duracion = stoi(dato, &sz);
+				dato.clear();
+				cont++;
+			}
+			else if (c == ';' && cont == 4) { // Proba de infección
+				probInf = stod(dato, &sz);
+				dato.clear();
+				cont++;
+			}
+			else if (c == ';' && cont == 5) { // Proba de Recuperación
+				probRec = stod(dato, &sz);
+				dato.clear();
 				cont++;
 			}
 			c = archivo.get();
 		}
-		cout << nombre << prInfeccion << endl;
-
+		cout << " -Poblacion: " << poblacion <<"\n" <<  " -Dimension: " << dimension << "\n" 
+			<< " -Infeccion Inicial: " << infInicial << "\n" << " -Duracion: " << duracion << "\n" 
+			<< " -Prob Infeccion: " << probInf << "\n" 
+			<< " -Proba de Recuperacion: " << probRec << endl;
 		archivo.close();
-=======
-		std::string orbits ("365.24 29.53");
-	  std::string::size_type sz;     // alias of size_t
-
-	  double earth = std::stod (orbits,substr(sz));
-	  double moon = std::stod (orbits.substr(sz));
-	  std::cout << "The moon completes " << (earth/moon) << " orbits per Earth year.\n";
-		//ifstream lectura;
-		//ifstream archivo;
-		//string::size_type sz; // algo para la stiring
-
-		//string nombre;
-		//double prInfeccion;
-		//int semanas;
-		//string dato;
-
-		//int cont = 0;
-		//archivo.open("DATOS.txt", ios::in);
-		//char c = archivo.get();
-		//while (!archivo.eof()) {
-		//	dato += c;
-		//	if (c == ';' && cont == 0) {
-		//		nombre = dato;
-		//		dato.clear;
-		//		cont++;
-		//	}
-		//	else if (c == ';' && cont == 1) {
-		//		prInfeccion = stod(dato, &sz);
-		//		dato.clear;
-		//		cont++;
-		//	}
-		//	c = archivo.get();
-		//}
-		//cout << nombre << prInfeccion << endl;
-
-		//archivo.close();
->>>>>>> parent of 6012855... lEYENDO DATROS
 	}
 
+	MPI_Bcast(&poblacion, 1, MPI_INT, 0, MPI_COMM_WORLD);
+	MPI_Bcast(&dimension, 1, MPI_INT, 0, MPI_COMM_WORLD);
+	MPI_Bcast(&infInicial, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+	MPI_Bcast(&duracion, 1, MPI_INT, 0, MPI_COMM_WORLD);
+	MPI_Bcast(&probInf, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+	MPI_Bcast(&probRec, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+	/*-------------------------------------Recuperación de Datos--------------------------------------*/
 
-		// Matriz de enfermos sexuales
 
-	
+	/*-------------------------------------Inicializar------------------------------------------------*/
 
 
-/*------------------------------------finalizaci�n de la ejecuci�n paralela---------------------------*/
+
+	// Matriz de enfermos sexuales
+
+	/*-------------------------------------Inicializar------------------------------------------------*/
+
+
+
+	/*--------------------------------finalizaci�n de la ejecuci�n paralela---------------------------*/
 	if (mid == 0)
 		cin.ignore();
 	MPI_Barrier(MPI_COMM_WORLD); // para sincronizar la finalizaci�n de los procesos
@@ -175,19 +128,14 @@ int main(int argc, char* argv[]) {
 }/*-------------------------------------------------main final---------------------------------------*/
 
 
- /*---------------------------------------------M�todos------------------------------------------------*/
-
-
- /*---------------------------------------------M�todos------------------------------------------------*/
-
-   /*---------------------------------------------------------------------
-   * REQ: N/A
-   * MOD: N/A
-   * EFE: despliega mensaje indicando c�mo ejecutar el programa y pasarle par�metros de entrada.
-   * ENTRAN:
-   *		nombre_prog:  nombre del programa
-   * SALEN: N/A
-   */
+ /*---------------------------------------------------------------------
+ * REQ: N/A
+ * MOD: N/A
+ * EFE: despliega mensaje indicando c�mo ejecutar el programa y pasarle par�metros de entrada.
+ * ENTRAN:
+ *		nombre_prog:  nombre del programa
+ * SALEN: N/A
+ */
 void uso(string nombre_prog /* in */) {
 	cerr << nombre_prog.c_str() << " secuencia de par�metros de entrada" << endl;
 	exit(0);
@@ -215,12 +163,12 @@ void obt_args(
 
 
 
-//End of file with a Cow (Bettsy)
-//                               __.----.___
-//   ||            ||  (\(__)/)-'||      ;--` ||
-//  _||____________||___`(QQ)'___||______;____||_
-//  -||------------||----)  (----||-----------||-
-//  _||____________||___(o  o)___||______;____||_
-//  -||------------||----`--'----||-----------||-
-//   ||            ||       `|| ||| || ||     ||
-//^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   //End of file with a Cow (Bettsy)
+   //                               __.----.___
+   //   ||            ||  (\(__)/)-'||      ;--` ||
+   //  _||____________||___`(QQ)'___||______;____||_
+   //  -||------------||----)  (----||-----------||-
+   //  _||____________||___(o  o)___||______;____||_
+   //  -||------------||----`--'----||-----------||-
+   //   ||            ||       `|| ||| || ||     ||
+   //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
