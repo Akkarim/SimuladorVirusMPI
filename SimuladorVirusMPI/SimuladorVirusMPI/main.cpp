@@ -90,16 +90,20 @@ int main(int argc, char* argv[]) {
 		string nombre;
 		double prInfeccion;
 		double temp;
-		int personas;
+		int semanas;
 		string dato;
 
 		int cont = 0;
 		archivo.open("DATOS.txt", ios::in);
 		char c = archivo.get();
 		while (!archivo.eof()) {
+<<<<<<< HEAD
 			if (c != ';') {
 				dato += c;
 			}
+=======
+			dato += c;
+>>>>>>> parent of b8bf829... Sigo con los datos
 			cout << dato << endl;//*-*-*-*-*-*-*-*-*-*-*-*
 			if (c == ';' && cont == 0) {
 				nombre = dato;
@@ -108,17 +112,11 @@ int main(int argc, char* argv[]) {
 			}
 			else if (c == ';' && cont == 1) {
 				prInfeccion = stod(dato, &sz);
-				dato.clear();
-				cont++;
-			}
-			else if (c == ';' && cont == 2) {
-				personas = stoi(dato, &sz);
-				dato.clear();
 				cont++;
 			}
 			c = archivo.get();
 		}
-		cout << nombre << "Proba de infeccion: " << prInfeccion << "Semanas: " << personas << endl;
+		cout << nombre << prInfeccion << endl;
 
 		archivo.close();
 	}
