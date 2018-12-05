@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
-
+#include <random>
 
 using namespace std;
 
@@ -18,11 +18,12 @@ void obt_args(
 	char*    argv[]        /* in  */,
 	int&     dato_salida  /* out */);
 
+pair<int, int> generarPosRandom(int tam);
+
 
 int main(int argc, char* argv[]) {
 	int mid; // id de cada proceso
 	int cnt_proc; // cantidad de procesos
-	int n, np, local_n;
 
 	MPI_Status mpi_status; // para capturar estado al finalizar invocaci�n de funciones MPI
 						   /* Arrancar ambiente MPI */
@@ -37,7 +38,7 @@ int main(int argc, char* argv[]) {
 	MPI_Barrier(MPI_COMM_WORLD);
 #  endif
 
-	/*-------------------------------------ejecuci�n del proceso principal----------------------------*/
+	/*-------------------------------------PROGRAMA PRINCIPAL----------------------------*/
 	double prInfeccion;
 	int poblacion;
 	int dimension;
@@ -45,6 +46,7 @@ int main(int argc, char* argv[]) {
 	int duracion;
 	double probInf; //Probabilidad de infección
 	double probRec; //Probabilidad de Recupereci+on
+
 	/*-------------------------------------Recuperación de Datos--------------------------------------*/
 	if (mid == 0) {
 
@@ -111,7 +113,35 @@ int main(int argc, char* argv[]) {
 
 	/*-------------------------------------Inicializar------------------------------------------------*/
 
+	if (mid == 0) {
 
+		int *personas;
+		pair <int, int> pos;
+		/*
+		-X
+		-Y
+		-Estado
+		-Tics enfermo
+		*/
+		personas = (int*)malloc(poblacion * sizeof(int)); // Para un array de tamaño población
+		int persona = 4; //para las casillas
+		///HACER LAS VARAS DEL MAE PARALELIZADO
+		for (int i = 0; i < poblacion; i++) {
+			pos = generarPosRandom(dimension);
+			personas[i] = pos.first; // Hacer un método de genera una pos random que compruebe si ya esta usada
+			personas[i + 1] = pos.second; //Same
+			personas[i + 2] = 2; // Estado
+			personas[i + 3] = 4; //Tics
+			personas[i + 4] = -1; ///Separación de cada persona
+			i += 4;
+		}
+
+		for (int i = 0; i < 100; i++) {
+			cout << personas[i]  << endl;
+		}
+
+
+	}
 
 	// Matriz de enfermos sexuales
 
@@ -162,6 +192,23 @@ void obt_args(
 #  endif
 }  /* obt_args */
 
+
+pair<int, int> generarPosRandom(int tam) {
+	pair<int, int> pos;
+	default_random_engine gen;
+	uniform_int_distribution<int> distribution(0, tam - 1);
+	pos.first = distribution(gen);
+	pos.second= distribution(gen);
+	
+	/*
+	do {
+		pos.first = distribution(gen);
+		pos.second = distribution(gen);
+	} while (poblacionInfectada[pos.first][pos.second] == 0 || poblacionInfectada[pos.first][pos.second] == 1);*/
+
+	return pos;
+
+}
 
 
    //End of file with a Cow (Bettsy)
