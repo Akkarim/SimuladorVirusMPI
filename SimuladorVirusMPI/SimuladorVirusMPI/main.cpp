@@ -193,6 +193,11 @@ void obt_args(
 }  /* obt_args */
 
 
+/*
+*REQ: Dimensión
+*EFE: Genera una posicón Random, una X y Y y busca si está en la matrix
+*MOD: Nothing
+*/
 pair<int, int> generarPosRandom(int tam) {
 	pair<int, int> pos;
 	default_random_engine gen;
