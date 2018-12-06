@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <random>
+#include <time.h>
 
 using namespace std;
 
@@ -112,10 +113,14 @@ int main(int argc, char* argv[]) {
 
 
 	/*-------------------------------------Inicializar------------------------------------------------*/
+	int local_n = poblacion / cnt_proc;
+	int *personasLocal;
+	personasLocal = (int*)malloc(poblacion * sizeof(int)); // Para un array de tamaño población
+	int *personas;
+	personas = (int*)malloc(poblacion * sizeof(int)); // Para un array de tamaño población
 
 	if (mid == 0) {
-
-		int *personas;
+		int random;
 		pair <int, int> pos;
 		/*
 		-X
@@ -123,27 +128,49 @@ int main(int argc, char* argv[]) {
 		-Estado
 		-Tics enfermo
 		*/
-		personas = (int*)malloc(poblacion * sizeof(int)); // Para un array de tamaño población
-		int persona = 4; //para las casillas
 		///HACER LAS VARAS DEL MAE PARALELIZADO
+		int infectados = poblacion*(infInicial/100);
 		for (int i = 0; i < poblacion; i++) {
 			pos = generarPosRandom(dimension);
 			personas[i] = pos.first; // Hacer un método de genera una pos random que compruebe si ya esta usada
 			personas[i + 1] = pos.second; //Same
-			personas[i + 2] = 2; // Estado
+			/*Enfermar al 10%*/
+			
+			if (infectados > 0) {
+				personas[i + 2] = 1; // Estado
+				infectados--;
+			}
+			else {
+				personas[i + 2] = 0; // No reuerdo los estados
+			}
 			personas[i + 3] = 4; //Tics
 			personas[i + 4] = -1; ///Separación de cada persona
 			i += 4;
 		}
 
-		for (int i = 0; i < 100; i++) {
+		for (int i = 0; i < 100; i++) { // imprime el vector
 			cout << personas[i]  << endl;
 		}
 
-
+		//MPI_Allgather(personas, poblacion, MPI_INT, personasLocal, poblacion, MPI_INT, MPI_COMM_WORLD);http://mpitutorial.com/tutorials/mpi-scatter-gather-and-allgather/
+		MPI_Scatter(personas, local_n, MPI_INT, personasLocal, local_n, MPI_INT, 0, MPI_COMM_WORLD);
+	}
+	for (int i = 0; i < 100; i++) { // imprime el vector
+		cout << personasLocal[i] << endl;
 	}
 
-	// Matriz de enfermos sexuales
+	//----------------------Inicialización de la MAtriz---------------------------------------------------------
+	int *enfermos;
+	enfermos = (int*)malloc(dimension * dimension *  sizeof(int *)); //matriz de enfermos sexuales
+	
+	int x, y, i = 0; //posición de las personas
+	
+	while(i < dimension){
+		x = personasLocal[i];
+		y = personasLocal[i + 1];
+		cout <<"Impreso por  " << mid <<" Mi x es " << x << " Mi y es " << y << endl;
+		i += 3;
+	}
 
 	/*-------------------------------------Inicializar------------------------------------------------*/
 
@@ -198,18 +225,21 @@ void obt_args(
 *EFE: Genera una posicón Random, una X y Y y busca si está en la matrix
 *MOD: Nothing
 */
-pair<int, int> generarPosRandom(int tam) {
+pair<int, int> generarPosRandom(int tam, /*int[tam][tam] enfermos*/) {//Pasar la maatriz por parámetro
+
 	pair<int, int> pos;
-	default_random_engine gen;
-	uniform_int_distribution<int> distribution(0, tam - 1);
-	pos.first = distribution(gen);
-	pos.second= distribution(gen);
-	
-	/*
-	do {
-		pos.first = distribution(gen);
-		pos.second = distribution(gen);
-	} while (poblacionInfectada[pos.first][pos.second] == 0 || poblacionInfectada[pos.first][pos.second] == 1);*/
+	//default_random_engine gen;
+	//uniform_int_distribution<int> distribution(0, tam - 1);
+	//pos.first = distribution(gen);
+	//pos.second= distribution(gen);
+	srand(time(NULL));
+	pos.first = rand() % tam;
+	pos.second = rand() % tam;
+
+	/*do {
+		pos.first = rand() % tam;
+		pos.second = rand() % tam;
+	} while (enfermos[pos.first][pos.second] == 0 || enfermos[pos.first][pos.second] == 1);*/
 
 	return pos;
 
