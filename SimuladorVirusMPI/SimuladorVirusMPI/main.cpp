@@ -102,7 +102,7 @@ int main(int argc, char* argv[]) {
 			<< " -Proba de Recuperacion: " << probRec << endl;
 		archivo.close();
 	}
-
+	/*-------------------------------------Recuperación de Datos--------------------------------------*/
 	MPI_Bcast(&poblacion, 1, MPI_INT, 0, MPI_COMM_WORLD);
 	MPI_Bcast(&dimension, 1, MPI_INT, 0, MPI_COMM_WORLD);
 	MPI_Bcast(&infInicial, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
@@ -119,6 +119,9 @@ int main(int argc, char* argv[]) {
 	personasLocal = (int*)malloc(poblacion * sizeof(int)); // Para un array de tamaño población
 	int *personas;
 	personas = (int*)malloc(poblacion * sizeof(int)); // Para un array de tamaño población
+	/*Matriz*/
+	int **cantInfc = (int **)malloc(poblacion/4 * sizeof(int*));
+	for (int i = 0; i < poblacion / 4; i++) cantInfc[i] = (int *)malloc(poblacion / 4 * sizeof(int));
 
 	if (mid == 0) {
 		int random;
@@ -130,18 +133,20 @@ int main(int argc, char* argv[]) {
 		-Tics enfermo
 		*/
 		///HACER LAS VARAS DEL MAE PARALELIZADO
-		int infectados = poblacion*(infInicial/100);
+		int infectados = (poblacion*(infInicial))/4; //PRUEBA 
+		cout << "Infectados:  " << infectados << endl;
+		default_random_engine gen;
+		uniform_int_distribution<int> distribution(0, dimension - 1);
 		for (int i = 0; i < poblacion; i+=4) {
-			pos = generarPosRandom(dimension);
-			personas[i] = pos.first; // Hacer un método de genera una pos random que compruebe si ya esta usada
-			personas[i + 1] = pos.second; //Same
+			do {
+				pos.first = distribution(gen);
+				pos.second = distribution(gen);
+				personas[i] = pos.first; 
+				personas[i + 1] = pos.second;
+			} while (cantInfc[pos.first][pos.second] == 1);//Hace que las psiciones no sean iguales al inicio
+			cantInfc[pos.first][pos.second] = 1;
+
 			/*Enfermar al 10%*/
-			/*
-			0-Sano
-			1-Enfermo
-			2-Inmune
-			3-Paul Walker
-			*/
 			if (infectados > 0) {
 				personas[i + 2] = 1; // Estado
 				infectados--;
@@ -149,21 +154,28 @@ int main(int argc, char* argv[]) {
 			else {
 				personas[i + 2] = 0; // No reuerdo los estados
 			}
+			/*
+			Estados:
+			0-Sano
+			1-Enfermo
+			2-Inmune
+			3-Paul Walker
+			*/
 			personas[i + 3] = 0; //Tics [Debe arrancar en 0]
-			//personas[i + 4] = -1; ///Separación de cada persona
-			//i += 4;
-		}
-
-		for (int i = 0; i < 100; i++) { // imprime el vector
-			cout << personas[i]  << endl;
 		}
 
 		//MPI_Allgather(personas, poblacion, MPI_INT, personasLocal, poblacion, MPI_INT, MPI_COMM_WORLD);http://mpitutorial.com/tutorials/mpi-scatter-gather-and-allgather/
-		MPI_Scatter(personas, local_n, MPI_INT, personasLocal, local_n, MPI_INT, 0, MPI_COMM_WORLD);
+		
 	}
-	for (int i = 0; i < 400; i+=4) { // imprime el vector
-		cout <<"x: " << personasLocal[i] <<"y: " << personasLocal[i+1] <<"Estado: " << personasLocal[i+2] <<"Semanas: " << personasLocal[i+3] << endl;
+	MPI_Barrier(MPI_COMM_WORLD);
+	MPI_Scatter(personas, local_n, MPI_INT, personasLocal, local_n, MPI_INT, 0, MPI_COMM_WORLD);
+	//cout << "Soy el proceso: " << mid << endl;
+
+#  ifdef DEBUG 
+	for (int i = 0; i < 100; i += 4) { // imprime el vector de cada hilo
+		cout << " " << i << " " << "x: " << personasLocal[i] << " y: " << personasLocal[i + 1] << " Estado: " << personasLocal[i + 2] << " Semanas: " << personasLocal[i + 3] << " Proceso: " << mid << endl;
 	}
+# endif
 
 	//----------------------Inicialización de la MAtriz---------------------------------------------------------
 	int *enfermos;
@@ -174,7 +186,7 @@ int main(int argc, char* argv[]) {
 	while(i < dimension){
 		x = personasLocal[i];
 		y = personasLocal[i + 1];
-		cout <<"Impreso por  " << mid <<" Mi x es " << x << " Mi y es " << y << endl;
+		//cout <<"Impreso por  " << mid <<" Mi x es " << x << " Mi y es " << y << endl;
 		i += 3;
 	}
 
@@ -238,9 +250,9 @@ pair<int, int> generarPosRandom(int tam/*, int[tam][tam] enfermos*/) {//Pasar la
 	//uniform_int_distribution<int> distribution(0, tam - 1);
 	//pos.first = distribution(gen);
 	//pos.second= distribution(gen);
-	srand(time(NULL));
+	/*srand(time(NULL));
 	pos.first = rand() % tam;
-	pos.second = rand() % tam;
+	pos.second = rand() % tam;*/
 
 	/*do {
 		pos.first = rand() % tam;
