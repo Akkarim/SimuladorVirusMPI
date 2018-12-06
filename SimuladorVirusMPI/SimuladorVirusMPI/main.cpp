@@ -113,6 +113,7 @@ int main(int argc, char* argv[]) {
 
 
 	/*-------------------------------------Inicializar------------------------------------------------*/
+	poblacion *= 4; //La poblacion debe ser en cuestiones de tamanno, cuatro veces mas grande, pues una persona son 4 espacios del arreglo.
 	int local_n = poblacion / cnt_proc;
 	int *personasLocal;
 	personasLocal = (int*)malloc(poblacion * sizeof(int)); // Para un array de tamaño población
@@ -130,12 +131,17 @@ int main(int argc, char* argv[]) {
 		*/
 		///HACER LAS VARAS DEL MAE PARALELIZADO
 		int infectados = poblacion*(infInicial/100);
-		for (int i = 0; i < poblacion; i++) {
+		for (int i = 0; i < poblacion; i+=4) {
 			pos = generarPosRandom(dimension);
 			personas[i] = pos.first; // Hacer un método de genera una pos random que compruebe si ya esta usada
 			personas[i + 1] = pos.second; //Same
 			/*Enfermar al 10%*/
-			
+			/*
+			0-Sano
+			1-Enfermo
+			2-Inmune
+			3-Paul Walker
+			*/
 			if (infectados > 0) {
 				personas[i + 2] = 1; // Estado
 				infectados--;
@@ -143,9 +149,9 @@ int main(int argc, char* argv[]) {
 			else {
 				personas[i + 2] = 0; // No reuerdo los estados
 			}
-			personas[i + 3] = 4; //Tics
-			personas[i + 4] = -1; ///Separación de cada persona
-			i += 4;
+			personas[i + 3] = 0; //Tics [Debe arrancar en 0]
+			//personas[i + 4] = -1; ///Separación de cada persona
+			//i += 4;
 		}
 
 		for (int i = 0; i < 100; i++) { // imprime el vector
@@ -155,8 +161,8 @@ int main(int argc, char* argv[]) {
 		//MPI_Allgather(personas, poblacion, MPI_INT, personasLocal, poblacion, MPI_INT, MPI_COMM_WORLD);http://mpitutorial.com/tutorials/mpi-scatter-gather-and-allgather/
 		MPI_Scatter(personas, local_n, MPI_INT, personasLocal, local_n, MPI_INT, 0, MPI_COMM_WORLD);
 	}
-	for (int i = 0; i < 100; i++) { // imprime el vector
-		cout << personasLocal[i] << endl;
+	for (int i = 0; i < 400; i+=4) { // imprime el vector
+		cout <<"x: " << personasLocal[i] <<"y: " << personasLocal[i+1] <<"Estado: " << personasLocal[i+2] <<"Semanas: " << personasLocal[i+3] << endl;
 	}
 
 	//----------------------Inicialización de la MAtriz---------------------------------------------------------
@@ -225,7 +231,7 @@ void obt_args(
 *EFE: Genera una posicón Random, una X y Y y busca si está en la matrix
 *MOD: Nothing
 */
-pair<int, int> generarPosRandom(int tam, /*int[tam][tam] enfermos*/) {//Pasar la maatriz por parámetro
+pair<int, int> generarPosRandom(int tam/*, int[tam][tam] enfermos*/) {//Pasar la maatriz por parámetro
 
 	pair<int, int> pos;
 	//default_random_engine gen;
