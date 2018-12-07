@@ -19,7 +19,7 @@ void obt_args(
 	char*    argv[]        /* in  */,
 	int&     dato_salida  /* out */);
 
-int imprimir(int *personas, int poblacion);
+int imprimir(int *personas, int poblacion, int c, ofstream& bit);
 
 int main(int argc, char* argv[]) {
 	int mid; // id de cada proceso
@@ -37,14 +37,13 @@ int main(int argc, char* argv[]) {
 	MPI_Barrier(MPI_COMM_WORLD);
 	MPI_Comm_size(MPI_COMM_WORLD, &cnt_proc);  /* El comunicador le da valor a p (n�mero de procesos) */
 
-
 #  ifdef DEBUG 
 	if (mid == 0)
 		cin.ignore();
 	MPI_Barrier(MPI_COMM_WORLD);
 #  endif
 
-	/*-------------------------------------PROGRAMA PRINCIPAL----------------------------*/
+	/*************************************PROGRAMA PRINCIPAL*******************************************/
 	double prInfeccion;
 	int poblacion;
 	int dimension;
@@ -107,6 +106,7 @@ int main(int argc, char* argv[]) {
 			<< " -Proba de Recuperacion: " << probRec << endl;
 		archivo.close();
 	}
+	/*--------------------------------------Lectura de Datos------------------------------------------*/
 	/*-------------------------------------Recuperación de Datos--------------------------------------*/
 	MPI_Bcast(&poblacion, 1, MPI_INT, 0, MPI_COMM_WORLD);
 	MPI_Bcast(&dimension, 1, MPI_INT, 0, MPI_COMM_WORLD);
@@ -119,19 +119,20 @@ int main(int argc, char* argv[]) {
 
 	/*-------------------------------------Inicializar------------------------------------------------*/
 	poblacion *= 4; //La poblacion debe ser en cuestiones de tamanno, cuatro veces mas grande, pues una persona son 4 espacios del arreglo.
-	int local_n = poblacion / cnt_proc;
-	int limite = (dimension - 1);
-	int *personasLocal;
-
+	int local_n = poblacion / cnt_proc; // Para cada proceso
+	int limite = (dimension - 1); // Para que no se salga de la matrix
+	
+	/*Array*/
+	int *personas; // Array General de personas
+	int *personasLocal; // Array para cada proceso
 	personasLocal = (int*)malloc(poblacion * sizeof(int)); // Para un array de tamaño población
-	int *personas; 
 	personas = (int*)malloc(poblacion * sizeof(int)); // Para un array de tamaño población
+	
 	/*Matriz*/
 	int **cantInfc = (int **)malloc(dimension * sizeof(int*));
 	for (int i = 0; i < dimension; i++) cantInfc[i] = (int *)malloc(dimension * sizeof(int));
 
 	if (mid == 0) {
-		//int random;
 		pair <int, int> pos;
 		/*
 		-X
@@ -139,8 +140,7 @@ int main(int argc, char* argv[]) {
 		-Estado
 		-Tics enfermo
 		*/
-		///HACER LAS VARAS DEL MAE PARALELIZADO
-		int infectados = (poblacion*(infInicial))/4; //PRUEBA 
+		int infectados = (poblacion*(infInicial))/4; 
 		cout << "Infectados:  " << infectados << endl;
 		default_random_engine gen;
 		uniform_int_distribution<int> distribution(0, dimension - 1);
@@ -150,7 +150,7 @@ int main(int argc, char* argv[]) {
 				pos.second = distribution(gen);
 				personas[i] = pos.first; 
 				personas[i + 1] = pos.second;
-			} while (cantInfc[pos.first][pos.second] == 1);//Hace que las psiciones no sean iguales al inicio
+			} while (cantInfc[pos.first][pos.second] == 1);//Hace que las posiciones no sean iguales al inicio
 			cantInfc[pos.first][pos.second] = 1;
 
 			/*Enfermar al 10%*/
@@ -159,29 +159,33 @@ int main(int argc, char* argv[]) {
 				infectados--;
 			}
 			else {
-				personas[i + 2] = 0; // No reuerdo los estados
+				personas[i + 2] = 0;
 			}
 			/*
 			Estados:
 			0-Sano
 			1-Enfermo
 			2-Inmune
-			3-Paul Walker
+			3-Paul Walker (muerto)
 			*/
 			personas[i + 3] = 0; //Tics [Debe arrancar en 0]
 		}
 	}
-	//MPI_Barrier(MPI_COMM_WORLD);
-	//MPI_Scatter(personas, local_n, MPI_INT, personasLocal, local_n, MPI_INT, 0, MPI_COMM_WORLD);
 
+	/*-------------------------------------Inicializar------------------------------------------------*/
 	int random;
 	srand(time(NULL));
-	//cout << "Hasta aquí llegué, soy proc: " << mid<<endl;
-	int estab = 1;
-	MPI_Barrier(MPI_COMM_WORLD);
-	while (estab!=0) { ///Cambiar
-		MPI_Scatter(personas, local_n, MPI_INT, personasLocal, local_n, MPI_INT, 0, MPI_COMM_WORLD);
+	int estab = 1; //  Para el booleano improvisado para mpi
+	int c = 0; //Contador de tics
+	int nota = 0;
+	double proba = 0.0;
 
+	MPI_Barrier(MPI_COMM_WORLD);
+
+	ofstream bit("bitacora.txt");// para bitácora
+
+	while (estab!=0) { // Itera mientras haya enfermos*************************************************
+		MPI_Scatter(personas, local_n, MPI_INT, personasLocal, local_n, MPI_INT, 0, MPI_COMM_WORLD);
 
 		/*Limpiar Matriz*/
 		for (int i = 0; i < dimension; i++) {
@@ -189,17 +193,8 @@ int main(int argc, char* argv[]) {
 				cantInfc[i][j] = 0;
 			}
 		}
-		/*for (int i = 0; i < dimension; i++) {
-			for (int j = 0; j < dimension; j++) {
-				cout<<" "<<cantInfc[i][j]<<" ";
-			}
-			cout << endl;
-		}*/
-		//for (int i = 0; i < 100; i += 4) { // imprime el vector de cada hilo
-		//	cout << " " << i << " " << "x: " << personasLocal[i] << " y: " << personasLocal[i + 1] << " Estado: " << personasLocal[i + 2] << " Semanas: " << personasLocal[i + 3] << " Proceso: " << mid << endl;
-		//}
 		
-		/****************************Mover Inicio****************************/
+		/*---------------------------Mover Inicio-----------------------------------------------------*/
 		for (int i = 0; i < local_n; i += 4) {
 			//random_device rd;
 
@@ -234,7 +229,7 @@ int main(int argc, char* argv[]) {
 				personasLocal[i] -= 1;
 				personasLocal[i + 1] -= 1;
 			}
-
+			// Casos para la Toroide
 			if (personasLocal[i] < 0) {
 				personasLocal[i] = limite;
 			}
@@ -248,14 +243,9 @@ int main(int argc, char* argv[]) {
 				personasLocal[i + 1] = 0;
 			}
 		}
-		/****************************Mover Final****************************/
-		cout << endl;
+		/*---------------------------Mover Final------------------------------------------------------*/
 
-		//for (int i = 0; i < local_n; i += 4) { // imprime el vector de cada hilo
-		//	cout << " " << i << " " << "x: " << personasLocal[i] << " y: " << personasLocal[i + 1] << " Estado: " << personasLocal[i + 2] << " Semanas: " << personasLocal[i + 3] << " Proceso: " << mid << endl;
-		//}
-		//cin >> estab;
-		/*Reconstrucción de la Matriz*/
+		/*------------------------Reconstrucción de la Matriz-----------------------------------------*/
 		MPI_Gather(personasLocal, local_n, MPI_INT, personas, local_n, MPI_INT, 0, MPI_COMM_WORLD);
 		
 		for (int i = 0; i < poblacion; i += 4) {
@@ -263,41 +253,28 @@ int main(int argc, char* argv[]) {
 				cantInfc[personas[i]][personas[i + 1]] += 1;
 			}
 		}
-		/*if (mid == 0) {
-			for (int i = 0; i < poblacion; i += 4) {
-				cout << " " << i << " " << "x: " << personas[i] << " y: " << personas[i + 1] << " Estado: " << personas[i + 2] << " Semanas: " << personas[i + 3] << " Proceso: " << mid << endl;
-			}
-		}*/
+		/*------------------------Reconstrucción de la Matriz-----------------------------------------*/
+
 		MPI_Barrier(MPI_COMM_WORLD);
-		//cin >> estab;
-		/*Imprime Matriz*/
-		cout << endl;
-		for (int i = 0; i < dimension; i++) {
-			for (int j = 0; j < dimension; j++) {
-				cout << " " << cantInfc[i][j] << " ";
-			}
-			cout << endl;
-		}
-		//cin >> estab;
 
-		
-
-		
-
-		//cin >> estab;
-		
-		/*Reconstrucción de la Matriz*/
-
-		/*Proceso Central de Infectación infectada infecciosa*/
-		int nota = 0;
-		double proba = 0.0;
+		/*------------------------Imprime Matriz------------------------------------------------------*/
+		//cout << endl;
+		//for (int i = 0; i < dimension; i++) {
+		//	for (int j = 0; j < dimension; j++) {
+		//		cout << " " << cantInfc[i][j] << " ";
+		//	}
+		//	cout << endl;
+		//}
+	
+		/*----------------------Proceso Central de Infectación infectada infecciosa-------------------*/
+		nota = 0;
+		proba = 0.0;
 		srand(time(NULL));
-		
-		cout << "Proba: " << proba<<endl;
+
 		for (int i = 0; i < local_n; i += 4) {
 			nota = cantInfc[personasLocal[i]][personasLocal[i + 1]]; 
 			if (personasLocal[i+2]== 0 && cantInfc[personasLocal[i]][personasLocal[i+1]] > 0) { // Sano y hay Infecta2
-				while (nota > 0) {
+				while (nota > 0) { // Por si hay más personas
 					proba = rand() / (RAND_MAX + 1.);
 					if (proba <= probInf) {
 						personasLocal[i + 2] = 1;
@@ -307,7 +284,6 @@ int main(int argc, char* argv[]) {
 					else {
 						nota--;
 					}
-					
 				}
 			}
 			else if (personasLocal[i + 2] == 1) {
@@ -328,19 +304,31 @@ int main(int argc, char* argv[]) {
 		}
 		
 		MPI_Gather(personasLocal, local_n, MPI_INT, personas, local_n, MPI_INT, 0, MPI_COMM_WORLD);
-		cout << "Hasta aquí llegué  " << mid << endl;
-		//cin >> estab;
-		/*Proceso Central de Infectación infectada infecciosa*/
+
+		/*----------------------Proceso Central de Infectación infectada infecciosa--------------------*/
+		
 		if(mid==0){
-			estab=imprimir(personas, poblacion);
+			/*------------------------------------Para Bitácora-----------------------------------------------*/
+			if (c == 0) {
+				bit << "FELIPE CARMONA B51558 & LUIS CARVAJAL B31494\nDatos iniciales:\n- Cantidad de Personas: " << poblacion / 4 <<
+					"\n- Probabilidad de infección: " << probInf << "%" << "\n- Probabilidad de Recuperación: " << probRec << "%" <<
+					"\n- Semanas: " << duracion << "\n- Porcentaje de personas originalmente infectadas: " << infInicial << "%" <<
+					"\n- Cantidad de personas originalmente infectadas: " << (poblacion / 4) * (infInicial) <<
+					"\n- Tamaño de la Matriz (cuadrada): " << dimension << "\n- Cantidad de tics: " << c << endl;
+				bit << "----------------------------------------INICIO DEL PROGRAMA-----------------------------------------" << endl;
+			}
+			/*------------------------------------Para Bitácora-----------------------------------------------*/
+			c++;
+			cout << "------------------------------------------------------------------------------" << endl;
+			estab=imprimir(personas, poblacion, c, bit);
 		}
 		MPI_Barrier(MPI_COMM_WORLD);
 
 		MPI_Bcast(&estab, 1, MPI_INT, 0, MPI_COMM_WORLD);
 
-	}
-	cout << "Termina while";
-	/*--------------------------------finalizaci�n de la ejecuci�n paralela---------------------------*/
+	} // fin del while del proceso********************************************************************
+
+	/*********************************FINAL DEL PROCESO PRINCIPAL**************************************/
 	if (mid == 0)
 		cin.ignore();
 	MPI_Barrier(MPI_COMM_WORLD); // para sincronizar la finalizaci�n de los procesos
@@ -349,7 +337,13 @@ int main(int argc, char* argv[]) {
 	return 0;
 }/*-------------------------------------------------main final---------------------------------------*/
 
-int imprimir(int* personas, int poblacion) {
+
+ /*---------------------------------------------------------------------
+ * REQ: Array de personas global y poblabción.
+ * MOD: N/A
+ * EFE: Imprime los datos y agrega la bitácora
+ */
+int imprimir(int* personas, int poblacion, int c, ofstream& bit) {
 	int estable = 1;
 	int enfermos = 0, sanos = 0, inmunes = 0, muertos = 0;
 	for (int i = 0; i < poblacion;i+=4) {
@@ -366,7 +360,12 @@ int imprimir(int* personas, int poblacion) {
 			muertos++;
 		}
 	}
-	cout << "Sanos: " << sanos << "\n" << "Inmunes: " << inmunes << "\n" << "Enfermos: " << enfermos << "\n" << "Muertos: " << muertos<<endl;
+	cout << "Sanos: " << sanos << "\n" << "Inmunes: " << inmunes << "\n" << "Enfermos: " << enfermos << "\n" << "Muertos: " << muertos
+		<<"\n" << "Thic: " << c << endl;
+	bit << "Sanos: " << sanos << "\n" << "Inmunes: " << inmunes << "\n" << "Enfermos: " << enfermos << "\n" << "Muertos: " << muertos
+		<< "\n" << "Thic: " << c << endl;
+	bit << "---------------------------------------------------------------------------------------------" << endl;
+
 	if (enfermos == 0) {
 		estable = 0;
 	}	
@@ -400,21 +399,19 @@ void obt_args(
 
 	dato_salida = strtol(argv[1], NULL, 10); // se obtiene valor del argumento 1 pasado por "l�nea de comandos".
 
-
-
 #  ifdef DEBUG
 	cout << "dato_salida = " << dato_salida << endl;
 #  endif
 }  /* obt_args */
 
-   //End of file with a Cow (Bettsy)
+   //End of SEMESTER with a Cow (Bettsy)
    //                               __.----.___
    //   ||            ||  (\(__)/)-'||      ;--` ||
    //  _||____________||___`(QQ)'___||______;____||_
    //  -||------------||----)  (----||-----------||-
    //  _||____________||___(o  o)___||______;____||_
    //  -||------------||----`--'----||-----------||-
-   //   ||            ||       `|| ||| || ||     ||
+   //   ||            ||       `|| ||| || ||     ||(L)FD
    ///^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
    ///^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
    ///^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
