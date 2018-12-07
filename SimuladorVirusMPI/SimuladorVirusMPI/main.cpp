@@ -11,7 +11,7 @@
 
 using namespace std;
 
-//#define DEBUG
+#define DEBUG
 
 void uso(string nombre_prog);
 
@@ -107,6 +107,7 @@ int main(int argc, char* argv[]) {
 		archivo.close();
 	}
 	/*--------------------------------------Lectura de Datos------------------------------------------*/
+
 	/*-------------------------------------Recuperación de Datos--------------------------------------*/
 	MPI_Bcast(&poblacion, 1, MPI_INT, 0, MPI_COMM_WORLD);
 	MPI_Bcast(&dimension, 1, MPI_INT, 0, MPI_COMM_WORLD);
@@ -131,7 +132,7 @@ int main(int argc, char* argv[]) {
 	/*Matriz*/
 	int **cantInfc = (int **)malloc(dimension * sizeof(int*));
 	for (int i = 0; i < dimension; i++) cantInfc[i] = (int *)malloc(dimension * sizeof(int));
-
+	
 	if (mid == 0) {
 		pair <int, int> pos;
 		/*
@@ -140,6 +141,10 @@ int main(int argc, char* argv[]) {
 		-Estado
 		-Tics enfermo
 		*/
+		for (int i = 0; i < poblacion;i+=4) {
+			personas[i] = i;
+			cout << i << endl;
+		}
 		int infectados = (poblacion*(infInicial))/4; 
 		cout << "Infectados:  " << infectados << endl;
 		default_random_engine gen;
@@ -152,7 +157,6 @@ int main(int argc, char* argv[]) {
 				personas[i + 1] = pos.second;
 			} while (cantInfc[pos.first][pos.second] == 1);//Hace que las posiciones no sean iguales al inicio
 			cantInfc[pos.first][pos.second] = 1;
-
 			/*Enfermar al 10%*/
 			if (infectados > 0) {
 				personas[i + 2] = 1; // Estado
@@ -169,9 +173,15 @@ int main(int argc, char* argv[]) {
 			3-Paul Walker (muerto)
 			*/
 			personas[i + 3] = 0; //Tics [Debe arrancar en 0]
+			//cout << "Hasta aqui llegue: " <<i<<" "<< personas[i + 2] << endl;
 		}
+	
+		cout << "Hasta aqui llegue: " << personas[4+2]<< endl;
+		
+		cout << "Hasta aqui llegue: " << mid << endl;
 	}
 
+	MPI_Barrier(MPI_COMM_WORLD);
 	/*-------------------------------------Inicializar------------------------------------------------*/
 	int random;
 	srand(time(NULL));
@@ -180,13 +190,14 @@ int main(int argc, char* argv[]) {
 	int nota = 0;
 	double proba = 0.0;
 
-	MPI_Barrier(MPI_COMM_WORLD);
 
+	
 	ofstream bit("bitacora.txt");// para bitácora
-
+	
+	
 	while (estab!=0) { // Itera mientras haya enfermos*************************************************
 		MPI_Scatter(personas, local_n, MPI_INT, personasLocal, local_n, MPI_INT, 0, MPI_COMM_WORLD);
-
+		
 		/*Limpiar Matriz*/
 		for (int i = 0; i < dimension; i++) {
 			for (int j = 0; j < dimension; j++) {
