@@ -19,8 +19,8 @@ void obt_args(
 	char*    argv[]        /* in  */,
 	int&     dato_salida  /* out */);
 
-pair<int, int> generarPosRandom(int tam);
-
+//pair<int, int> generarPosRandom(int tam);
+int imprimir(int *personas, int poblacion);
 
 int main(int argc, char* argv[]) {
 	int mid; // id de cada proceso
@@ -115,16 +115,18 @@ int main(int argc, char* argv[]) {
 	/*-------------------------------------Inicializar------------------------------------------------*/
 	poblacion *= 4; //La poblacion debe ser en cuestiones de tamanno, cuatro veces mas grande, pues una persona son 4 espacios del arreglo.
 	int local_n = poblacion / cnt_proc;
+	int limite = ((poblacion / 4) - 1);
 	int *personasLocal;
+
 	personasLocal = (int*)malloc(poblacion * sizeof(int)); // Para un array de tamaño población
-	int *personas;
+	int *personas; 
 	personas = (int*)malloc(poblacion * sizeof(int)); // Para un array de tamaño población
 	/*Matriz*/
 	int **cantInfc = (int **)malloc(poblacion/4 * sizeof(int*));
 	for (int i = 0; i < poblacion / 4; i++) cantInfc[i] = (int *)malloc(poblacion / 4 * sizeof(int));
 
 	if (mid == 0) {
-		int random;
+		//int random;
 		pair <int, int> pos;
 		/*
 		-X
@@ -163,37 +165,191 @@ int main(int argc, char* argv[]) {
 			*/
 			personas[i + 3] = 0; //Tics [Debe arrancar en 0]
 		}
-
-		//MPI_Allgather(personas, poblacion, MPI_INT, personasLocal, poblacion, MPI_INT, MPI_COMM_WORLD);http://mpitutorial.com/tutorials/mpi-scatter-gather-and-allgather/
-		
 	}
+	//MPI_Barrier(MPI_COMM_WORLD);
+	//MPI_Scatter(personas, local_n, MPI_INT, personasLocal, local_n, MPI_INT, 0, MPI_COMM_WORLD);
+
+	//for (int i = 0; i < 100; i += 4) { // imprime el vector de cada hilo
+	//	cout << " " << i << " " << "x: " << personasLocal[i] << " y: " << personasLocal[i + 1] << " Estado: " << personasLocal[i + 2] << " Semanas: " << personasLocal[i + 3] << " Proceso: " << mid << endl;
+	//}
+
+
+	int random;
+	srand(time(NULL));
+	//cout << "Hasta aquí llegué, soy proc: " << mid<<endl;
+	int estab = 1;
 	MPI_Barrier(MPI_COMM_WORLD);
-	MPI_Scatter(personas, local_n, MPI_INT, personasLocal, local_n, MPI_INT, 0, MPI_COMM_WORLD);
-	//cout << "Soy el proceso: " << mid << endl;
+	while (estab!=0) { ///Cambiar
 
-#  ifdef DEBUG 
-	for (int i = 0; i < 100; i += 4) { // imprime el vector de cada hilo
-		cout << " " << i << " " << "x: " << personasLocal[i] << " y: " << personasLocal[i + 1] << " Estado: " << personasLocal[i + 2] << " Semanas: " << personasLocal[i + 3] << " Proceso: " << mid << endl;
+		
+
+		MPI_Scatter(personas, local_n, MPI_INT, personasLocal, local_n, MPI_INT, 0, MPI_COMM_WORLD);
+		
+		/*Limpiar Matriz*/
+		for (int i = 0; i < poblacion / 4; i++) {
+			for (int j = 0; j < poblacion / 4; j++) {
+				cantInfc[i][j] = 0;
+			}
+		}
+
+		/*Mover Inicio*/
+		for (int i = 0; i < local_n; i += 4) {
+			random = rand() % 8;
+			if (random == 0) {//Arriba
+				if (personasLocal[i] == 0) { //Techo
+					personasLocal[i] = (poblacion / 4) - 1;
+				}
+				else {
+					personasLocal[i] -= 1;
+				}
+			}
+			else if (random == 1) {//Abajo
+				if (personasLocal[i] == limite) { //piso
+					personasLocal[i] = 0;
+				}
+				else {
+					personasLocal[i] += 1;
+				}
+			}
+			else if (random == 2) {//Derecha
+				if (personasLocal[i + 1] == limite) { //pared derecha
+					personasLocal[i + 1] = 0;
+				}
+				else {
+					personasLocal[i + 1] += 1;
+				}
+			}
+			else if (random == 3) {//Izquierda
+				if (personasLocal[i + 1] == 0) { // Pared izq
+					personasLocal[i + 1] = limite;
+				}
+				else {
+					personasLocal[i + 1] -= 1;
+				}
+			}
+			else if (random == 4) {//Diag Sup Derecha
+				if (personasLocal[i] = 0 && personasLocal[i + 1] == limite) { //Esquena sup der
+					personasLocal[i] = limite;
+					personasLocal[i + 1] = 0;
+				}
+				else if (personasLocal[i + 1] == limite) {
+					personasLocal[i + 1] = 0;
+					personasLocal[i] += 1;
+				}
+				else {
+					personasLocal[i + 1] += 1;
+					personasLocal[i] += 1;
+				}
+			}
+			else if (random == 5) {//Diag Inferior Derecha
+				if (personasLocal[i] == limite && personasLocal[i + 1] == limite) {
+					personasLocal[i + 1] = 0;
+					personasLocal[i] = 0;
+				}
+				else if (personasLocal[i + 1] == limite) {
+					personasLocal[i] -= 1;
+					personasLocal[i + 1] = 0;
+				}
+				else {
+					personasLocal[i] -= 1;
+					personasLocal[i + 1] += 1;
+				}
+			}
+			else if (random == 6) {//Diag Inferior Izquierda
+				if (personasLocal[i] == limite && personasLocal[i + 1] == 0) {
+					personasLocal[i + 1] = limite;
+					personasLocal[i] = 0;
+				}
+				else if (personasLocal[i + 1] == 0) {
+					personasLocal[i] -= 1;
+					personasLocal[i + 1] = limite;
+				}
+				else {
+					personasLocal[i] -= 1;
+					personasLocal[i + 1] -= 1;
+				}
+			}
+			else if (random == 7) {//Diag Sup Izquierda
+				if (personasLocal[i] == 0 && personasLocal[i + 1] == 0) {
+					personasLocal[i + 1] = limite;
+					personasLocal[i] = limite;
+				}
+				else if (personasLocal[i] == 0) {
+					personasLocal[i] -= 1;
+					personasLocal[i + 1] += 1;
+				}
+				else {
+					personasLocal[i] -= 1;
+					personasLocal[i + 1] += 1;
+				}
+			}
+		}
+		/*Mover Final*/
+		
+		/*Reconstrucción de la Matriz*/
+		MPI_Gather(personas, poblacion, MPI_INT, personasLocal, poblacion, MPI_INT, 0, MPI_COMM_WORLD);
+		for (int i = 0; i < poblacion; i += 4) {
+			if (personas[i + 2] == 1) {
+				cantInfc[personas[i]][personas[i + 1]] += 1;
+			}
+		}
+		
+		/*for (int i = 0; i < poblacion/4; i++) {
+			for (int j = 0; j < poblacion/4; j++) {
+				cout << " " << cantInfc[i][j] << " ";
+			}
+			cout << endl;
+		}*/
+		
+		/*Reconstrucción de la Matriz*/
+
+		/*Proceso Central de Infectación infectada infecciosa*/
+		int nota = 0;
+		double proba = 0.0;
+		srand(time(NULL));
+		proba = rand() / (RAND_MAX + 1.);
+		for (int i = 0; i < local_n; i += 4) {
+			nota = cantInfc[personasLocal[i]][personasLocal[i + 1]]; 
+			if (personasLocal[i+2]== 0 && cantInfc[personasLocal[i]][personasLocal[i+1]] > 0) { // Sano y hay Infecta2
+				while (nota > 0) {
+					if (proba <= probInf) {
+						personasLocal[i + 2] = 1;
+						personasLocal[i + 3] += 1;
+						nota = 0;
+					}
+					else {
+						nota--;
+					}
+					
+				}
+			}
+			else if (personasLocal[i + 2] == 1) {
+				if (personasLocal[i+3] == duracion) {
+					if(proba <= probRec){
+						personasLocal[i + 2] = 2; //inmune
+					}
+					else {
+						personasLocal[i + 2] = 3; //muere
+					}
+				}
+				else {
+					personasLocal[i + 3] += 1;
+				}
+
+			}
+		}
+		
+		MPI_Gather(personas, poblacion, MPI_INT, personasLocal, poblacion, MPI_INT, 0, MPI_COMM_WORLD);
+		cout << "Hasta aquí llegué  " << mid << endl;
+
+		/*Proceso Central de Infectación infectada infecciosa*/
+		if(mid==0){
+			estab=imprimir(personas, poblacion);
+		}
+		MPI_Bcast(&estab, 1, MPI_INT, 0, MPI_COMM_WORLD);
+
 	}
-# endif
-
-	//----------------------Inicialización de la MAtriz---------------------------------------------------------
-	int *enfermos;
-	enfermos = (int*)malloc(dimension * dimension *  sizeof(int *)); //matriz de enfermos sexuales
-	
-	int x, y, i = 0; //posición de las personas
-	
-	while(i < dimension){
-		x = personasLocal[i];
-		y = personasLocal[i + 1];
-		//cout <<"Impreso por  " << mid <<" Mi x es " << x << " Mi y es " << y << endl;
-		i += 3;
-	}
-
-	/*-------------------------------------Inicializar------------------------------------------------*/
-
-
-
+	cout << "Termina while";
 	/*--------------------------------finalizaci�n de la ejecuci�n paralela---------------------------*/
 	if (mid == 0)
 		cin.ignore();
@@ -203,7 +359,29 @@ int main(int argc, char* argv[]) {
 	return 0;
 }/*-------------------------------------------------main final---------------------------------------*/
 
-
+int imprimir(int* personas, int poblacion) {
+	int estable = 1;
+	int enfermos = 0, sanos = 0, inmunes = 0, muertos = 0;
+	for (int i = 0; i < poblacion;i+=4) {
+		if (personas[i + 2] == 0) {
+			sanos++;
+		}
+		else if (personas[i + 2] == 1) {
+			enfermos++;
+		}
+		else if (personas[i+2]==2) {
+			inmunes++;
+		}
+		else if (personas[i + 2] == 3) {
+			muertos++;
+		}
+	}
+	cout << "Sanos: " << sanos << "\n" << "Inmunes: " << inmunes << "\n" << "Enfermos: " << enfermos << "\n" << "Muertos: " << muertos<<endl;
+	if (enfermos == 0) {
+		estable = 1;
+	}	
+	return estable;
+}
  /*---------------------------------------------------------------------
  * REQ: N/A
  * MOD: N/A
@@ -232,37 +410,12 @@ void obt_args(
 
 	dato_salida = strtol(argv[1], NULL, 10); // se obtiene valor del argumento 1 pasado por "l�nea de comandos".
 
+
+
 #  ifdef DEBUG
 	cout << "dato_salida = " << dato_salida << endl;
 #  endif
 }  /* obt_args */
-
-
-/*
-*REQ: Dimensión
-*EFE: Genera una posicón Random, una X y Y y busca si está en la matrix
-*MOD: Nothing
-*/
-pair<int, int> generarPosRandom(int tam/*, int[tam][tam] enfermos*/) {//Pasar la maatriz por parámetro
-
-	pair<int, int> pos;
-	//default_random_engine gen;
-	//uniform_int_distribution<int> distribution(0, tam - 1);
-	//pos.first = distribution(gen);
-	//pos.second= distribution(gen);
-	/*srand(time(NULL));
-	pos.first = rand() % tam;
-	pos.second = rand() % tam;*/
-
-	/*do {
-		pos.first = rand() % tam;
-		pos.second = rand() % tam;
-	} while (enfermos[pos.first][pos.second] == 0 || enfermos[pos.first][pos.second] == 1);*/
-
-	return pos;
-
-}
-
 
    //End of file with a Cow (Bettsy)
    //                               __.----.___
@@ -272,4 +425,6 @@ pair<int, int> generarPosRandom(int tam/*, int[tam][tam] enfermos*/) {//Pasar la
    //  _||____________||___(o  o)___||______;____||_
    //  -||------------||----`--'----||-----------||-
    //   ||            ||       `|| ||| || ||     ||
-   //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   ///^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   ///^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   ///^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
