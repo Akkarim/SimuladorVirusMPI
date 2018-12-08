@@ -145,29 +145,19 @@ int main(int argc, char* argv[]) {
 	for (int i = 0; i < dimension; i++) cantInfc[i] = (int *)malloc(dimension * sizeof(int));
 	
 	if (mid == 0) {
-		pair <int, int> pos;
 		/*
 		-X
 		-Y
 		-Estado
 		-Tics enfermo
 		*/
-		for (int i = 0; i < poblacion;i+=4) {
-			personas[i] = i;
-			//cout << i << endl;
-		}
 		int infectados = (poblacion*(infInicial))/4; 
 		cout << "Infectados:  " << infectados << endl;
 		default_random_engine gen;
 		uniform_int_distribution<int> distribution(0, dimension - 1);
 		for (int i = 0; i < poblacion; i+=4) {
-			//do {
-			pos.first = distribution(gen);
-			pos.second = distribution(gen);
-			personas[i] = pos.first; 
-			personas[i + 1] = pos.second;
-			//} while (cantInfc[pos.first][pos.second] == 1);//Hace que las posiciones no sean iguales al inicio
-			cantInfc[pos.first][pos.second] = 1;
+			personas[i] = distribution(gen);
+			personas[i + 1] = distribution(gen);
 			/*Enfermar al 10%*/
 			if (infectados > 0) {
 				personas[i + 2] = 1; // Estado
