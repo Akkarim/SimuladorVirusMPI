@@ -316,7 +316,6 @@ int main(int argc, char* argv[]) {
 		/*----------------------Proceso Central de Infectación infectada infecciosa--------------------*/
 		
 		local_f = MPI_Wtime();
-		local_e = local_f - local_s;
 
 		if(mid==0){
 			/*------------------------------------Para Bitácora-----------------------------------------------*/
@@ -330,6 +329,7 @@ int main(int argc, char* argv[]) {
 			}
 			/*------------------------------------Para Bitácora-----------------------------------------------*/
 			c++;
+			local_e = (local_f - local_s) / c;
 			cout << "------------------------------------------------------------------------------" << endl;
 			estab=imprimir(personas, poblacion, c, bit);
 		}
@@ -355,7 +355,7 @@ int main(int argc, char* argv[]) {
 }/*-------------------------------------------------main final---------------------------------------*/
 
 
- /*---------------------------------------------------------------------
+ /*---------------------------------------------------------------------C:\Users\luisd\Documents\Paralela\SimuladorVirusMPI\SimuladorVirusMPI\SimuladorVirusMPI
  * REQ: Array de personas global y poblabción.
  * MOD: N/A
  * EFE: Imprime los datos y agrega la bitácora
