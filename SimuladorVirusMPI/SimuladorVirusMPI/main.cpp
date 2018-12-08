@@ -11,7 +11,7 @@
 
 using namespace std;
 
-#define DEBUG
+//#define DEBUG
 
 void uso(string nombre_prog);
 
@@ -37,11 +37,11 @@ int main(int argc, char* argv[]) {
 	MPI_Barrier(MPI_COMM_WORLD);
 	MPI_Comm_size(MPI_COMM_WORLD, &cnt_proc);  /* El comunicador le da valor a p (n�mero de procesos) */
 
-#  ifdef DEBUG 
-	if (mid == 0)
-		cin.ignore();
-	MPI_Barrier(MPI_COMM_WORLD);
-#  endif
+//#  ifdef DEBUG 
+//	if (mid == 0)
+//		cin.ignore();
+//	MPI_Barrier(MPI_COMM_WORLD);
+//#  endif
 
 	/*************************************PROGRAMA PRINCIPAL*******************************************/
 	double prInfeccion;
@@ -51,6 +51,7 @@ int main(int argc, char* argv[]) {
 	int duracion;
 	double probInf; //Probabilidad de infección
 	double probRec; //Probabilidad de Recupereci+on
+	double local_s, local_f, local_e, elapsed;
 
 	/*--------------------------------------Lectura de Datos------------------------------------------*/
 	if (mid == 0) {
@@ -61,7 +62,17 @@ int main(int argc, char* argv[]) {
 		string dato;
 
 		int cont = 0;
-		archivo.open("DATOS.txt", ios::in);
+
+		int r = 0;
+		cout << "Presione 1 para el experimento 1 (1millon de personas y matriz e 500) o 2 para el experimento 2 (10millones de personasy matriz de 1000)? " << endl;
+		cin >> r;
+
+		if (r == 1) {
+			archivo.open("DATOS1.txt", ios::in);
+		}
+		else if (r == 2) {
+			archivo.open("DATOS2.txt", ios::in);
+		}
 		char c = archivo.get();
 		while (!archivo.eof()) {
 			if (c != ';') {
@@ -143,19 +154,19 @@ int main(int argc, char* argv[]) {
 		*/
 		for (int i = 0; i < poblacion;i+=4) {
 			personas[i] = i;
-			cout << i << endl;
+			//cout << i << endl;
 		}
 		int infectados = (poblacion*(infInicial))/4; 
 		cout << "Infectados:  " << infectados << endl;
 		default_random_engine gen;
 		uniform_int_distribution<int> distribution(0, dimension - 1);
 		for (int i = 0; i < poblacion; i+=4) {
-			do {
-				pos.first = distribution(gen);
-				pos.second = distribution(gen);
-				personas[i] = pos.first; 
-				personas[i + 1] = pos.second;
-			} while (cantInfc[pos.first][pos.second] == 1);//Hace que las posiciones no sean iguales al inicio
+			//do {
+			pos.first = distribution(gen);
+			pos.second = distribution(gen);
+			personas[i] = pos.first; 
+			personas[i + 1] = pos.second;
+			//} while (cantInfc[pos.first][pos.second] == 1);//Hace que las posiciones no sean iguales al inicio
 			cantInfc[pos.first][pos.second] = 1;
 			/*Enfermar al 10%*/
 			if (infectados > 0) {
@@ -173,16 +184,13 @@ int main(int argc, char* argv[]) {
 			3-Paul Walker (muerto)
 			*/
 			personas[i + 3] = 0; //Tics [Debe arrancar en 0]
-			//cout << "Hasta aqui llegue: " <<i<<" "<< personas[i + 2] << endl;
 		}
-	
-		cout << "Hasta aqui llegue: " << personas[4+2]<< endl;
-		
-		cout << "Hasta aqui llegue: " << mid << endl;
 	}
 
 	MPI_Barrier(MPI_COMM_WORLD);
+
 	/*-------------------------------------Inicializar------------------------------------------------*/
+
 	int random;
 	srand(time(NULL));
 	int estab = 1; //  Para el booleano improvisado para mpi
@@ -190,11 +198,10 @@ int main(int argc, char* argv[]) {
 	int nota = 0;
 	double proba = 0.0;
 
-
-	
 	ofstream bit("bitacora.txt");// para bitácora
 	
-	
+	local_s = MPI_Wtime(); // Inicia el tiempo
+
 	while (estab!=0) { // Itera mientras haya enfermos*************************************************
 		MPI_Scatter(personas, local_n, MPI_INT, personasLocal, local_n, MPI_INT, 0, MPI_COMM_WORLD);
 		
@@ -204,7 +211,7 @@ int main(int argc, char* argv[]) {
 				cantInfc[i][j] = 0;
 			}
 		}
-		
+
 		/*---------------------------Mover Inicio-----------------------------------------------------*/
 		for (int i = 0; i < local_n; i += 4) {
 			//random_device rd;
@@ -267,20 +274,10 @@ int main(int argc, char* argv[]) {
 		/*------------------------Reconstrucción de la Matriz-----------------------------------------*/
 
 		MPI_Barrier(MPI_COMM_WORLD);
-
-		/*------------------------Imprime Matriz------------------------------------------------------*/
-		//cout << endl;
-		//for (int i = 0; i < dimension; i++) {
-		//	for (int j = 0; j < dimension; j++) {
-		//		cout << " " << cantInfc[i][j] << " ";
-		//	}
-		//	cout << endl;
-		//}
 	
 		/*----------------------Proceso Central de Infectación infectada infecciosa-------------------*/
 		nota = 0;
 		proba = 0.0;
-		srand(time(NULL));
 
 		for (int i = 0; i < local_n; i += 4) {
 			nota = cantInfc[personasLocal[i]][personasLocal[i + 1]]; 
@@ -318,6 +315,9 @@ int main(int argc, char* argv[]) {
 
 		/*----------------------Proceso Central de Infectación infectada infecciosa--------------------*/
 		
+		local_f = MPI_Wtime();
+		local_e = local_f - local_s;
+
 		if(mid==0){
 			/*------------------------------------Para Bitácora-----------------------------------------------*/
 			if (c == 0) {
@@ -339,9 +339,15 @@ int main(int argc, char* argv[]) {
 
 	} // fin del while del proceso********************************************************************
 
+	MPI_Reduce(&local_e, &elapsed, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
+
 	/*********************************FINAL DEL PROCESO PRINCIPAL**************************************/
-	if (mid == 0)
+	if (mid == 0) {
+		cout << "El tiempo de duracion fue: " << elapsed << " Con " << poblacion/4 << " personas." << endl;
+		int d = 0;
+		cin >> d;
 		cin.ignore();
+	}
 	MPI_Barrier(MPI_COMM_WORLD); // para sincronizar la finalizaci�n de los procesos
 
 	MPI_Finalize();
@@ -372,9 +378,9 @@ int imprimir(int* personas, int poblacion, int c, ofstream& bit) {
 		}
 	}
 	cout << "Sanos: " << sanos << "\n" << "Inmunes: " << inmunes << "\n" << "Enfermos: " << enfermos << "\n" << "Muertos: " << muertos
-		<<"\n" << "Thic: " << c << endl;
+		<<"\n" << "Tic: " << c << endl;
 	bit << "Sanos: " << sanos << "\n" << "Inmunes: " << inmunes << "\n" << "Enfermos: " << enfermos << "\n" << "Muertos: " << muertos
-		<< "\n" << "Thic: " << c << endl;
+		<< "\n" << "Tic: " << c << endl;
 	bit << "---------------------------------------------------------------------------------------------" << endl;
 
 	if (enfermos == 0) {
